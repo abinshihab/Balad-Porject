@@ -228,12 +228,7 @@ resource "oci_core_instance" "API_Server" {
 
 # Create API Instacne Image
 
-resource "oci_core_image" "flask_instance_image" {
-  depends_on     = [null_resource.compute-script1]
-  compartment_id = var.compartment_ocid
-  instance_id    = oci_core_instance.API_Server.id
-  defined_tags   = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
-}
+
 
 # Create API Instacne Configuration
 
