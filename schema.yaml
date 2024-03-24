@@ -1,0 +1,385 @@
+## Copyright © 2021, Oracle and/or its affiliates. 
+## All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
+
+    title: "Create highly available three-tier web application with autoscaling in Oracle Cloud Infrastructure"
+    stackDescription: "Deploy a highly available three-tier web application with autoscaling in Oracle Cloud Infrastructure."
+    schemaVersion: 1.1.0
+    version: "20190404"
+    locale: "en"
+
+    variableGroups:
+    - title: General Configuration
+      visible: false
+      variables:
+      - tenancy_ocid
+      - release
+      - region
+      - oracle_instant_client_version
+      - oracle_instant_client_version_short
+      - availability_domain_number
+      - use_existing_nsg
+      - use_existing_vcn
+      - vcn_id
+      - lb_subnet_id
+      - lb_nsg_id
+      - compute_subnet_id
+      - compute_nsg_id
+      - MySql_subnet_id
+      - MySql_nsg_id
+
+    - title: Required Configuration
+      visible: true  
+      variables:
+      - compartment_ocid
+      - availability_domain_name 
+      - MySql_password
+      - MySql_free_tier
+      - MySql_data_guard_enabled
+      - MySql_private_endpoint 
+      - show_advanced
+
+    - title: Load Balancer Optional Configuration
+      visible: 
+          and:
+            - show_advanced
+      variables:
+      - lb_shape
+      - flex_lb_min_shape
+      - flex_lb_max_shape 
+
+    - title: Compute Optional Configuration
+      visible: 
+          and:
+            - show_advanced
+      variables:
+      - ssh_public_key
+      - instance_os
+      - linux_os_version 
+      - instance_shape
+      - instance_flex_shape_ocpus
+      - instance_flex_shape_memory
+
+    - title: MySql Optional Configuration
+      visible: 
+          and:
+            - show_advanced
+      variables:
+      - MySql_database_cpu_core_count
+      - MySql_database_data_storage_size_in_tbs
+      - MySql_database_db_name
+      - MySql_database_db_version
+      - MySql_database_defined_tags_value
+      - MySql_database_display_name
+      - MySql_database_freeform_tags
+      - MySql_database_license_model
+      - MySql_tde_wallet_zip_file
+      - MySql_private_endpoint_label
+
+    variables:
+
+      show_advanced:
+        type: boolean
+        title: "Show advanced options?"
+        description: "Shows advanced options."
+        visible: true
+        default: false
+      
+      compartment_ocid:
+        type: oci:identity:compartment:id
+        required: true
+        visible: true
+        title: Compartment
+        description: "Compartment where you want to create the solution resources"
+
+      region:
+        type: oci:identity:region:name
+        required: true
+        visible: true
+        title: Region
+        description: "Region where you want to deploy the resources defined by this stack."
+
+      availability_domain_name:
+        type: oci:identity:availabilitydomain:name
+        required: true
+        visible: true
+        title: "Availability Domain to be chosen"
+        description: "Availability Domain to be chosen"
+        dependsOn:
+          compartmentId: ${compartment_ocid}
+
+      MySql_password:
+        type: password
+        required: true
+        visible: true
+        title: "MySql Database Password for ADMIN user."
+        description: "MySql Database Password for ADMIN user."
+        minLength: 12
+        maxLength: 30
+        pattern: ^[A-Za-z][A-Za-z0-9_#\$]+$ 
+
+      MySql_free_tier:
+        type: boolean
+        visibile: true
+        default: true
+        required: false
+        title: "MySql Database Free Tier"
+        description: "Check the box to deploy MySql Database Free Tier."
+
+      MySql_data_guard_enabled:
+        type: boolean
+        required: true
+        title: "MySql DataGuard"
+        description: "Check the box to enable MySql DataGuard."
+        visible: 
+          not:
+            - ${MySql_free_tier}
+
+
+      MySql_private_endpoint:
+        type: boolean
+        default: true
+        required: true
+        title: "MySql Database Private Endpoint"
+        description: "Check the box to deploy MySql Database with Private Endpoint."
+        visible: 
+          not:
+            - ${MySql_free_tier}
+
+      # Optional Configuration      
+      
+      lb_shape:
+        type: enum
+        title: "Load Balancer Shape"
+        description: "Load Balancer Shape"
+        default: "flexible"
+        required: false 
+        enum:
+          - "flexible"
+          - "100Mbps"
+          - "10Mbps"
+          - "10Mbps-Micro"
+          - "400Mbps"
+          - "8000Mbps"
+
+      flex_lb_min_shape:
+        type: enum
+        required: false
+        default: "10"
+        title: "LB Flex Min Shape"
+        description: "Choose Minimum Shape for Flex Load Balancer."
+        enum:
+          - "10"
+          - "100"
+          - "1000"
+          - "400"
+          - "8000"
+        visible:
+          and:
+            - eq:
+              - lb_shape 
+              - "flexible"
+
+      flex_lb_max_shape:
+        type: enum
+        required: false
+        default: "100"
+        title: "LB Flex Max Shape"
+        description: "Choose Maximum Shape for Flex Load Balancer."
+        enum:
+          - "10"
+          - "100"
+          - "1000"
+          - "400"
+          - "8000"
+        visible:
+          and:
+            - eq:
+              - lb_shape 
+              - "flexible"
+
+      ssh_public_key:
+        type: oci:core:ssh:publickey
+        title: "Public SSH Key"
+        description: "Choose public SSH Key to be uploaded into compute instances."
+        required: false
+
+      instance_shape:
+        type: oci:core:instanceshape:name
+        required: false
+        title: "Instance Shape"
+        description: "A shape is a template that determines the number of CPUs, amount of memory, and other resources allocated to a newly created instance."
+        default: "VM.Standard.E3.Flex"
+        dependsOn:
+          compartmentId: ${compartment_ocid}
+
+      instance_flex_shape_ocpus:
+        type: number
+        required: false
+        minimum: 1
+        maximum: 128
+        multipleOf: 1
+        default: 1
+        title: "Flex Shape OCPUs"
+        description: "Choose number of OCPUs for Flex Shape."
+        visible:
+          and:
+            - or:
+              - eq:
+                - instance_shape 
+                - "VM.Standard.E3.Flex"
+              - eq:
+                - instance_shape 
+                - "VM.Standard.E4.Flex"
+              - eq:
+                - instance_shape
+                - "VM.Optimized3.Flex"
+              - eq:
+                - instance_shape
+                - "VM.Standard.A1.Flex"
+
+      instance_flex_shape_memory:
+        type: number
+        required: false
+        minimum: 1
+        maximum: 128
+        multipleOf: 1
+        default: 10
+        title: "Flex Shape Memory (GB)"
+        description: "Choose number GB for Flex Shape Memory."
+        visible:
+          and:
+            - or:
+              - eq:
+                - instance_shape 
+                - "VM.Standard.E3.Flex"
+              - eq:
+                - instance_shape
+                - "VM.Standard.E4.Flex"
+              - eq:
+                - instance_shape
+                - "VM.Optimized3.Flex"  
+              - eq:
+                - instance_shape
+                - "VM.Standard.A1.Flex"
+
+      instance_os:
+        type: enum
+        required: false
+        title: "Instance OS"
+        description: "An Operating System that determines the operating system for the instance."
+        default: "Oracle Linux"
+        enum:
+          - "Oracle Linux"
+      
+      linux_os_version:
+        type: enum
+        required: false
+        title: "Instance OS version"
+        description: "An Operating System version that determines the operating system version for the instance."
+        default: "8"
+        enum:
+          - "8"
+          - "7.9"
+      
+      MySql_database_cpu_core_count:
+        type: number
+        required: false
+        minimum: 1
+        maximum: 128
+        multipleOf: 1
+        default: 1
+        title: "MySql Database CPU Core Count"
+        description: "Choose MySql Database CPU Core Count."
+
+      MySql_database_data_storage_size_in_tbs:
+        type: number
+        required: false
+        minimum: 1
+        maximum: 128
+        multipleOf: 1
+        default: 1
+        title: "MySql Database Data Storage Size (TB)"
+        description: "Choose MySql Database Data Storage Size in terabytes."
+
+      MySql_database_db_name:
+        type: string
+        required: false
+        default: "MySqldb1"
+        title: "MySql Database DBNAME"
+        description: "Choose MySql Database DBNAME."
+
+      MySql_database_db_version:
+        type: enum
+        required: false
+        default: "19c"
+        title: "MySql Database Version"
+        description: "Choose MySql Database Version."
+        enum:
+          - "19c"
+
+      MySql_database_display_name:
+        type: string
+        required: false
+        default: "MySqlDB"
+        title: "MySql Database Display Name"
+        description: "Choose MySql Database Display Name."
+
+      MySql_database_license_model:
+        type: enum
+        required: false
+        default: "LICENSE_INCLUDED"
+        title: "MySql Database License Model"
+        description: "Choose MySql Database License Model."
+        enum:
+          - "LICENSE_INCLUDED"
+          - "BRING_YOUR_OWN_LICENSE"
+
+      MySql_tde_wallet_zip_file:
+        type: string
+        required: false
+        visible: false
+        default: "tde_wallet_MySqldb1.zip"
+        title: "MySql Database TDE Wallet ZIP File"
+        description: "Choose MySql Database TDE Wallet ZIP File."
+      
+      MySql_private_endpoint_label:
+        type: string
+        required: false
+        visible: 
+            and:
+              - MySql_private_endpoint
+        default: "MySqlPrivateEndpoint"
+        title: "MySql Database Private Endpoint Label"
+        description: "Choose MySql Database Private Endpoint Label"
+
+      MySql_database_freeform_tags:
+        type: string
+        required: false
+        title: "MySql Database Freeform Tags"
+        description: "Choose MySql Database Freeform Tags"
+
+      MySql_database_defined_tags_value:
+        type: string
+        required: false
+        title: "MySql Database Defined Tags"
+        description: "Choose MySql Database Defined Tags"
+  
+      release:
+        type: string
+        required: false
+        visible: false
+        title: "Reference Architecture Release (OCI Architecture Center)"
+
+    outputs:
+
+      generated_ssh_private_key:
+        title: "Generated SSH Private Key"
+        displayText: "Generated SSH Private Key"
+        type: copyableString
+        visible: true
+
+      loadbalancer_public_url:
+        title: "Loadbalancer Public URL"
+        displayText: "Loadbalancer Public URL"
+        type: string
+        visible: true
