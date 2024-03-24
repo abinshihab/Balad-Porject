@@ -24,7 +24,6 @@ resource "oci_core_nat_gateway" "nat_gw_web" {
   compartment_id = var.compartment_ocid
   display_name   = "nat_gateway_web"
   vcn_id         = oci_core_virtual_network.vcn[0].id
-  subnet_id      = oci_core_subnet.subnet_web[0].id
   defined_tags   = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
 }
 
@@ -33,7 +32,6 @@ resource "oci_core_nat_gateway" "nat_gw_api" {
   compartment_id = var.compartment_ocid
   display_name   = "nat_gateway_api"
   vcn_id         = oci_core_virtual_network.vcn[0].id
-  subnet_id      = oci_core_subnet.subnet_api[0].id
   defined_tags   = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
 }
 
@@ -42,7 +40,6 @@ resource "oci_core_nat_gateway" "nat_gw_dashboard" {
   compartment_id = var.compartment_ocid
   display_name   = "nat_gateway_dashboard"
   vcn_id         = oci_core_virtual_network.vcn[0].id
-  subnet_id      = oci_core_subnet.subnet_dashboard[0].id
   defined_tags   = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
 }
 resource "oci_core_nat_gateway" "nat_gw_mysql" {
@@ -50,7 +47,6 @@ resource "oci_core_nat_gateway" "nat_gw_mysql" {
   compartment_id = var.compartment_ocid
   display_name   = "nat_gateway_mysql"
   vcn_id         = oci_core_virtual_network.vcn[0].id
-  subnet_id      = oci_core_subnet.subnet_mysql[0].id
   defined_tags   = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
 }
 # Create Internet Gateway
