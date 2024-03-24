@@ -10,16 +10,16 @@ data "template_file" "key_script" {
   }
 }
 
-data "template_cloudinit_config" "cloud_init" {
-  gzip          = true
-  base64_encode = true
+#data "template_cloudinit_config" "cloud_init" {
+#  gzip          = true
+#  base64_encode = true
 
-  part {
-    filename     = "ainit.sh"
-    content_type = "text/x-shellscript"
-    content      = data.template_file.key_script.rendered
-  }
-}
+#  part {
+#    filename     = "ainit.sh"
+#    content_type = "text/x-shellscript"
+#    content      = data.template_file.key_script.rendered
+#  }
+#}
 
 # Create Webserver Compute Instance 
 
@@ -52,7 +52,18 @@ resource "oci_core_instance" "compute_instance1" {
 
   metadata = {
     ssh_authorized_keys = var.ssh_public_key
-    user_data           = data.template_cloudinit_config.cloud_init.rendered
+    #user_data           = data.template_cloudinit_config.cloud_init.rendered
+    user_data           = <<-EOF
+                          #!/bin/bash
+                          # Install Node.js, npm, and Angular CLI
+                          curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+                          sudo apt-get install -y nodejs
+                          sudo npm install -g @angular/cli@17
+
+                          # Install Angular Universal for Server-Side Rendering (SSR)
+                          npm install --save @angular/platform-server
+                          EOF
+
   }
 
   timeouts {

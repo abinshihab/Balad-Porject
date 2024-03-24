@@ -1,5 +1,5 @@
 # Authentication
-tenancy_ocid         = "<tenancy_ocid>"
+tenancy_ocid         = "edesignagency"
 user_ocid            = "<user_ocid>"
 fingerprint          = "<fingerprint>"
 private_key_path     = "<private_key_path>"
