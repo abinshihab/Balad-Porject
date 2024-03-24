@@ -2,13 +2,13 @@
 tenancy_ocid         = "edesignagency"
 user_ocid            = "ocid1.user.oc1..aaaaaaaavwlgcwak6ozg4q33422rskyhwhgqd3mf62jravjwbxgybzwyauga"
 fingerprint          = "2048 SHA256:xWEGxETA1TZeE6UtAHakOrKlOAdgrwG/0LnYx9v506I no comment (RSA)"
-private_key_path     = ""
+private_key_path     = "examples/module-with-no-existing-network"
 
 # Region
-region = "<region>"
+region = "me-jeddah-1"
 
 # Compartment
-compartment_ocid = "<compartment_ocid>"
+compartment_ocid = "ocid1.compartment.oc1..aaaaaaaa6yhcqd3fowncmkyuxqxdlpfkhlzix4rp22qnkijoysuabopsms3q"
 
 # MySql_password
-MySql_password = "<MySql_password>"
+MySql_password = "PkjJlFTz"
